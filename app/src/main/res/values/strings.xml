@@ -20,4 +20,12 @@
     <string name="back_to_login_action">Вернуться ко входу</string>
     <string name="error_registration_required">Сначала зарегистрируйтесь</string>
     <string name="error_invalid_credentials">Неверный логин или пароль</string>
+    <string name="standings_title">Таблица пилотов</string>
+    <string name="standings_demo_note">Демонстрационные данные</string>
+    <string name="settings_action">Настройки</string>
+    <string name="column_position">Место</string>
+    <string name="column_driver">Пилот</string>
+    <string name="column_team">Команда</string>
+    <string name="column_points">Очки</string>
+    <string name="standings_empty">Таблица пока пуста</string>
 </resources>

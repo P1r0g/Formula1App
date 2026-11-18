@@ -20,4 +20,12 @@
     <string name="back_to_login_action">Back to sign in</string>
     <string name="error_registration_required">Create an account first</string>
     <string name="error_invalid_credentials">Incorrect username or password</string>
+    <string name="standings_title">Driver standings</string>
+    <string name="standings_demo_note">Demo data</string>
+    <string name="settings_action">Settings</string>
+    <string name="column_position">Pos.</string>
+    <string name="column_driver">Driver</string>
+    <string name="column_team">Team</string>
+    <string name="column_points">Points</string>
+    <string name="standings_empty">No standings yet</string>
 </resources>

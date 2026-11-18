@@ -1,53 +1,123 @@
 package com.example.formula1app.ui.theme
 
 import android.app.Activity
-import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
-import androidx.compose.material3.dynamicDarkColorScheme
-import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.platform.LocalContext
-
-private val DarkColorScheme = darkColorScheme(
-    primary = Purple80,
-    secondary = PurpleGrey80,
-    tertiary = Pink80
-)
+import androidx.compose.runtime.SideEffect
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalView
+import androidx.core.view.WindowCompat
+import com.example.formula1app.AppState
 
 private val LightColorScheme = lightColorScheme(
-    primary = Purple40,
-    secondary = PurpleGrey40,
-    tertiary = Pink40
+    primary = LightPrimary,
+    onPrimary = LightOnPrimary,
+    primaryContainer = LightPrimaryContainer,
+    onPrimaryContainer = LightOnPrimaryContainer,
 
-    /* Other default colors to override
-    background = Color(0xFFFFFBFE),
-    surface = Color(0xFFFFFBFE),
-    onPrimary = Color.White,
-    onSecondary = Color.White,
-    onTertiary = Color.White,
-    onBackground = Color(0xFF1C1B1F),
-    onSurface = Color(0xFF1C1B1F),
-    */
+    secondary = LightSecondaryText,
+    onSecondary = LightSurface,
+    secondaryContainer = LightSurfaceVariant,
+    onSecondaryContainer = LightText,
+
+    tertiary = LightPrimary,
+    onTertiary = LightOnPrimary,
+    tertiaryContainer = LightPrimaryContainer,
+    onTertiaryContainer = LightOnPrimaryContainer,
+
+    background = LightBackground,
+    onBackground = LightText,
+
+    surface = LightSurface,
+    onSurface = LightText,
+    surfaceVariant = LightSurfaceVariant,
+    onSurfaceVariant = LightSecondaryText,
+
+    outline = LightSecondaryText,
+    outlineVariant = LightOutline,
+
+    inverseSurface = DarkSurface,
+    inverseOnSurface = DarkText,
+    inversePrimary = DarkPrimary,
+
+    surfaceTint = Color.Transparent,
+    surfaceDim = LightBackground,
+    surfaceBright = LightSurface,
+    surfaceContainerLowest = LightSurface,
+    surfaceContainerLow = LightSurface,
+    surfaceContainer = LightSurface,
+    surfaceContainerHigh = LightSurfaceVariant,
+    surfaceContainerHighest = LightSurfaceVariant
+)
+
+private val DarkColorScheme = darkColorScheme(
+    primary = DarkPrimary,
+    onPrimary = DarkOnPrimary,
+    primaryContainer = DarkPrimaryContainer,
+    onPrimaryContainer = DarkOnPrimaryContainer,
+
+    secondary = DarkSecondaryText,
+    onSecondary = DarkBackground,
+    secondaryContainer = DarkSurfaceVariant,
+    onSecondaryContainer = DarkText,
+
+    tertiary = DarkPrimary,
+    onTertiary = DarkOnPrimary,
+    tertiaryContainer = DarkPrimaryContainer,
+    onTertiaryContainer = DarkOnPrimaryContainer,
+
+    background = DarkBackground,
+    onBackground = DarkText,
+
+    surface = DarkSurface,
+    onSurface = DarkText,
+    surfaceVariant = DarkSurfaceVariant,
+    onSurfaceVariant = DarkSecondaryText,
+
+    outline = DarkSecondaryText,
+    outlineVariant = DarkOutline,
+
+    inverseSurface = LightSurface,
+    inverseOnSurface = LightText,
+    inversePrimary = LightPrimary,
+
+    surfaceTint = Color.Transparent,
+    surfaceDim = DarkBackground,
+    surfaceBright = DarkSurfaceVariant,
+    surfaceContainerLowest = DarkBackground,
+    surfaceContainerLow = DarkSurface,
+    surfaceContainer = DarkSurface,
+    surfaceContainerHigh = DarkSurfaceVariant,
+    surfaceContainerHighest = DarkSurfaceVariant
 )
 
 @Composable
 fun Formula1AppTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
-    // Dynamic color is available on Android 12+
-    dynamicColor: Boolean = true,
+    darkTheme: Boolean = AppState.darkTheme ?: isSystemInDarkTheme(),
     content: @Composable () -> Unit
 ) {
-    val colorScheme = when {
-        dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
-            val context = LocalContext.current
-            if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
-        }
+    val colorScheme = if (darkTheme) {
+        DarkColorScheme
+    } else {
+        LightColorScheme
+    }
 
-        darkTheme -> DarkColorScheme
-        else -> LightColorScheme
+    val view = LocalView.current
+
+    if (!view.isInEditMode) {
+        SideEffect {
+            val window = (view.context as? Activity)?.window
+
+            if (window != null) {
+                WindowCompat.getInsetsController(window, view).apply {
+                    isAppearanceLightStatusBars = !darkTheme
+                    isAppearanceLightNavigationBars = !darkTheme
+                }
+            }
+        }
     }
 
     MaterialTheme(
