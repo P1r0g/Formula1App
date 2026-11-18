@@ -11,6 +11,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 import com.example.formula1app.AppState
+import com.example.formula1app.AppLocalization
 
 private val LightColorScheme = lightColorScheme(
     primary = LightPrimary,
@@ -120,9 +121,11 @@ fun Formula1AppTheme(
         }
     }
 
-    MaterialTheme(
-        colorScheme = colorScheme,
-        typography = Typography,
-        content = content
-    )
+    AppLocalization {
+        MaterialTheme(
+            colorScheme = colorScheme,
+            typography = Typography,
+            content = content
+        )
+    }
 }

@@ -28,4 +28,26 @@
     <string name="column_team">Команда</string>
     <string name="column_points">Очки</string>
     <string name="standings_empty">Таблица пока пуста</string>
+    <string name="appearance_title">Оформление</string>
+    <string name="dark_theme_label">Тёмная тема</string>
+    <string name="language_title">Язык приложения</string>
+    <string name="language_russian">Русский</string>
+    <string name="language_english">English</string>
+    <string name="back_to_standings_action">Вернуться к таблице</string>
+    <string name="profile_title">Профиль</string>
+    <string name="new_password_label">Новый пароль</string>
+    <string name="password_change_hint">Оставьте поля пароля пустыми, чтобы сохранить текущий пароль</string>
+    <string name="save_profile_action">Сохранить данные</string>
+    <string name="profile_saved">Данные профиля сохранены</string>
+    <string name="backup_title">Резервная копия</string>
+    <string name="backup_missing">Резервная копия ещё не создана</string>
+    <string name="backup_info">Пилотов в копии: %1$d\nСоздана: %2$s</string>
+    <string name="backup_no_data">В таблице нет данных для копирования</string>
+    <string name="create_backup_action">Создать копию</string>
+    <string name="update_backup_action">Обновить копию</string>
+    <string name="restore_backup_action">Восстановить таблицу</string>
+    <string name="delete_backup_action">Удалить копию</string>
+    <string name="backup_saved">Копия таблицы сохранена</string>
+    <string name="backup_restored">Таблица восстановлена из копии</string>
+    <string name="backup_deleted">Резервная копия удалена</string>
 </resources>

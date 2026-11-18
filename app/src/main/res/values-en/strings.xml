@@ -28,4 +28,26 @@
     <string name="column_team">Team</string>
     <string name="column_points">Points</string>
     <string name="standings_empty">No standings yet</string>
+    <string name="appearance_title">Appearance</string>
+    <string name="dark_theme_label">Dark theme</string>
+    <string name="language_title">App language</string>
+    <string name="language_russian">Русский</string>
+    <string name="language_english">English</string>
+    <string name="back_to_standings_action">Back to standings</string>
+    <string name="profile_title">Profile</string>
+    <string name="new_password_label">New password</string>
+    <string name="password_change_hint">Leave both password fields empty to keep your current password</string>
+    <string name="save_profile_action">Save changes</string>
+    <string name="profile_saved">Profile saved</string>
+    <string name="backup_title">Backup</string>
+    <string name="backup_missing">No backup has been created yet</string>
+    <string name="backup_info">Drivers saved: %1$d\nCreated: %2$s</string>
+    <string name="backup_no_data">There are no standings to back up</string>
+    <string name="create_backup_action">Create backup</string>
+    <string name="update_backup_action">Update backup</string>
+    <string name="restore_backup_action">Restore standings</string>
+    <string name="delete_backup_action">Delete backup</string>
+    <string name="backup_saved">Standings backup saved</string>
+    <string name="backup_restored">Standings restored from backup</string>
+    <string name="backup_deleted">Backup deleted</string>
 </resources>
