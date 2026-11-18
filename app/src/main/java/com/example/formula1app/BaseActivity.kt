@@ -41,6 +41,15 @@ open class BaseActivity : ComponentActivity() {
         logLifecycle("onDestroy")
     }
 
+    override fun onWindowFocusChanged(hasFocus: Boolean) {
+        super.onWindowFocusChanged(hasFocus)
+
+        Log.d(
+            "Formula1Lifecycle",
+            "${javaClass.simpleName}: onWindowFocusChanged($hasFocus)"
+        )
+    }
+
     private fun logLifecycle(method: String) {
         Log.d(
             "Formula1Lifecycle",
