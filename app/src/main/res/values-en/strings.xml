@@ -1,0 +1,23 @@
+<resources>
+    <string name="app_name">Formula1App</string>
+    <string name="error_email_required">Enter your email</string>
+    <string name="error_email_invalid">Enter a valid email address</string>
+    <string name="error_login_required">Enter a username</string>
+    <string name="error_login_invalid">Username must contain 3–20 Latin letters, digits or _</string>
+    <string name="error_password_required">Enter a password</string>
+    <string name="error_password_short">Password must contain at least 8 characters</string>
+    <string name="error_confirmation_required">Confirm your password</string>
+    <string name="error_password_mismatch">Passwords do not match</string>
+    <string name="start_description">Formula 1 driver standings</string>
+    <string name="registration_title">Registration</string>
+    <string name="email_label">Email</string>
+    <string name="login_label">Username</string>
+    <string name="password_label">Password</string>
+    <string name="confirmation_label">Confirm password</string>
+    <string name="register_action">Register</string>
+    <string name="registration_action">Create account</string>
+    <string name="login_action">Sign in</string>
+    <string name="back_to_login_action">Back to sign in</string>
+    <string name="error_registration_required">Create an account first</string>
+    <string name="error_invalid_credentials">Incorrect username or password</string>
+</resources>

@@ -1,3 +1,23 @@
 <resources>
     <string name="app_name">Formula1App</string>
+    <string name="error_email_required">Введите электронную почту</string>
+    <string name="error_email_invalid">Введите корректный адрес электронной почты</string>
+    <string name="error_login_required">Введите логин</string>
+    <string name="error_login_invalid">Логин: 3–20 символов — латинские буквы, цифры и _</string>
+    <string name="error_password_required">Введите пароль</string>
+    <string name="error_password_short">Пароль должен содержать не менее 8 символов</string>
+    <string name="error_confirmation_required">Повторите пароль</string>
+    <string name="error_password_mismatch">Пароли не совпадают</string>
+    <string name="start_description">Личный зачёт пилотов Formula 1</string>
+    <string name="registration_title">Регистрация</string>
+    <string name="email_label">Электронная почта</string>
+    <string name="login_label">Логин</string>
+    <string name="password_label">Пароль</string>
+    <string name="confirmation_label">Подтверждение пароля</string>
+    <string name="register_action">Зарегистрироваться</string>
+    <string name="registration_action">Регистрация</string>
+    <string name="login_action">Войти</string>
+    <string name="back_to_login_action">Вернуться ко входу</string>
+    <string name="error_registration_required">Сначала зарегистрируйтесь</string>
+    <string name="error_invalid_credentials">Неверный логин или пароль</string>
 </resources>
