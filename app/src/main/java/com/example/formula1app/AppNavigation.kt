@@ -7,6 +7,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -66,6 +67,8 @@ sealed interface AppDestination : NavKey {
 fun AppNavigation(
     onExit: () -> Unit
 ) {
+    val lifecycleLogger = remember { ScreenLifecycleLogger() }
+
     val backStack = rememberNavBackStack(AppDestination.Start)
 
     var initialLogin by rememberSaveable {
@@ -112,6 +115,8 @@ fun AppNavigation(
         ),
         entryProvider = entryProvider<NavKey> {
             entry<AppDestination.Start> {
+                lifecycleLogger.Observe("StartScreen")
+
                 key(loginFormVersion) {
                     StartScreen(
                         initialLogin = initialLogin,
@@ -131,6 +136,8 @@ fun AppNavigation(
             }
 
             entry<AppDestination.Registration> {
+                lifecycleLogger.Observe("RegistrationScreen")
+
                 RegistrationScreen(
                     onRegistrationComplete = { registeredLogin ->
                         if (
@@ -154,6 +161,8 @@ fun AppNavigation(
             }
 
             entry<AppDestination.Content> {
+                lifecycleLogger.Observe("ContentScreen")
+
                 ContentScreen(
                     standings = AppState.standings,
                     onOpenSettings = {
@@ -165,6 +174,8 @@ fun AppNavigation(
             }
 
             entry<AppDestination.Settings> {
+                lifecycleLogger.Observe("SettingsScreen")
+
                 SettingsScreen(
                     onBack = {
                         if (backStack.lastOrNull() == AppDestination.Settings) {
