@@ -1,4 +1,4 @@
-package com.example.formula1app
+package com.example.formula1app.ui
 
 import android.content.res.Configuration
 import androidx.compose.runtime.Composable

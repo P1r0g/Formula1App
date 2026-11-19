@@ -31,7 +31,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import com.example.formula1app.data.AppState
-import com.example.formula1app.ui.theme.Formula1AppTheme
+import com.example.formula1app.ui.BackupSettingsCard
+import com.example.formula1app.ui.Formula1AppTheme
+import com.example.formula1app.ui.ProfileSettingsCard
 
 class SettingsActivity : BaseActivity() {
 

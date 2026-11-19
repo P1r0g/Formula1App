@@ -35,8 +35,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.example.formula1app.data.AppState
 import com.example.formula1app.data.DriverStanding
-import com.example.formula1app.ui.theme.Formula1AppTheme
-import com.example.formula1app.ui.theme.teamColor
+import com.example.formula1app.ui.Formula1AppTheme
+import com.example.formula1app.ui.teamColor
 import java.text.NumberFormat
 
 class ContentActivity : BaseActivity() {

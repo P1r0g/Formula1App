@@ -1,4 +1,4 @@
-package com.example.formula1app
+package com.example.formula1app.ui
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -21,6 +21,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import com.example.formula1app.R
 import com.example.formula1app.data.UserProfile
 
 @Composable

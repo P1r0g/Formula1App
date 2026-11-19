@@ -1,4 +1,4 @@
-package com.example.formula1app.ui.theme
+package com.example.formula1app.ui
 
 import androidx.compose.material3.Typography
 import androidx.compose.ui.text.TextStyle

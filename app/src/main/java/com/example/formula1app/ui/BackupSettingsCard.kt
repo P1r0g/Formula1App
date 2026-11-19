@@ -1,4 +1,4 @@
-package com.example.formula1app
+package com.example.formula1app.ui
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -20,6 +20,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.example.formula1app.R
 import com.example.formula1app.data.AppState
 import java.text.DateFormat
 import java.util.Date

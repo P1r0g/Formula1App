@@ -32,7 +32,8 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import com.example.formula1app.data.AppState
 import com.example.formula1app.data.UserProfile
-import com.example.formula1app.ui.theme.Formula1AppTheme
+import com.example.formula1app.ui.Formula1AppTheme
+import com.example.formula1app.ui.Validation
 
 class RegistrationActivity : BaseActivity() {
 

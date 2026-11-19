@@ -1,4 +1,4 @@
-package com.example.formula1app.ui.theme
+package com.example.formula1app.ui
 
 import android.app.Activity
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -11,7 +11,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 import com.example.formula1app.data.AppState
-import com.example.formula1app.AppLocalization
 
 private val LightColorScheme = lightColorScheme(
     primary = LightPrimary,

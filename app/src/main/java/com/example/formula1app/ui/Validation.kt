@@ -1,6 +1,7 @@
-package com.example.formula1app
+package com.example.formula1app.ui
 
 import android.util.Patterns
+import com.example.formula1app.R
 
 object Validation {
 
