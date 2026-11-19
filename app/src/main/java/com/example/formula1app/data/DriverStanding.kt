@@ -1,4 +1,4 @@
-package com.example.formula1app
+package com.example.formula1app.data
 
 data class DriverStanding(
     val driverId: String,

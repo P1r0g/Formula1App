@@ -33,6 +33,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.example.formula1app.data.AppState
+import com.example.formula1app.data.DriverStanding
 import com.example.formula1app.ui.theme.Formula1AppTheme
 import com.example.formula1app.ui.theme.teamColor
 import java.text.NumberFormat

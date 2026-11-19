@@ -30,6 +30,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
+import com.example.formula1app.data.AppState
 import com.example.formula1app.ui.theme.Formula1AppTheme
 
 class SettingsActivity : BaseActivity() {

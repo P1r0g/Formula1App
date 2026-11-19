@@ -10,7 +10,7 @@ import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
-import com.example.formula1app.AppState
+import com.example.formula1app.data.AppState
 import com.example.formula1app.AppLocalization
 
 private val LightColorScheme = lightColorScheme(
