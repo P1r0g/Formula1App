@@ -112,4 +112,13 @@ class StandingsViewModel(application: Application) : AndroidViewModel(applicatio
     private companion object {
         const val TAG = "F1Standings"
     }
+
+    fun restoreStandings(standings: List<DriverStanding>): Boolean {
+        if (_uiState.value.isLoading) return false
+
+        hasRequested = true
+        failedOffset = null
+        _uiState.value = StandingsUiState(standings = standings)
+        return true
+    }
 }

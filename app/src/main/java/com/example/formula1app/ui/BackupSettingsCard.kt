@@ -24,11 +24,14 @@ import com.example.formula1app.R
 import com.example.formula1app.data.AppState
 import java.text.DateFormat
 import java.util.Date
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.formula1app.data.StandingsViewModel
 
 @Composable
-fun BackupSettingsCard() {
+fun BackupSettingsCard(standingsViewModel: StandingsViewModel) {
+    val state by standingsViewModel.uiState.collectAsStateWithLifecycle()
     val backup = AppState.standingsBackup
-    val hasData = AppState.standings.isNotEmpty()
+    val hasData = state.standings.isNotEmpty()
     val locale = LocalConfiguration.current.locales[0]
 
     var message by remember {
@@ -88,7 +91,7 @@ fun BackupSettingsCard() {
                 modifier = Modifier.fillMaxWidth(),
                 enabled = hasData,
                 onClick = {
-                    message = if (AppState.createBackup()) {
+                    message = if (AppState.createBackup(state.standings)) {
                         R.string.backup_saved
                     } else {
                         R.string.backup_no_data
@@ -108,12 +111,10 @@ fun BackupSettingsCard() {
 
             OutlinedButton(
                 modifier = Modifier.fillMaxWidth(),
-                enabled = backup != null,
+                enabled = backup != null && !state.isLoading,
                 onClick = {
-                    message = if (AppState.restoreBackup()) {
-                        R.string.backup_restored
-                    } else {
-                        R.string.backup_missing
+                    if (backup != null && standingsViewModel.restoreStandings(backup.standings)) {
+                        message = R.string.backup_restored
                     }
                 }
             ) {

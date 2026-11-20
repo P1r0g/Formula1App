@@ -31,9 +31,11 @@ import com.example.formula1app.R
 import com.example.formula1app.data.AppState
 import com.example.formula1app.ui.BackupSettingsCard
 import com.example.formula1app.ui.ProfileSettingsCard
+import com.example.formula1app.data.StandingsViewModel
 
 @Composable
 fun SettingsScreen(
+    standingsViewModel: StandingsViewModel,
     onBack: () -> Unit
 ) {
     val darkTheme = AppState.darkTheme ?: isSystemInDarkTheme()
@@ -138,7 +140,7 @@ fun SettingsScreen(
                     }
                 }
             }
-            BackupSettingsCard()
+            BackupSettingsCard(standingsViewModel)
 
             OutlinedButton(
                 onClick = onBack,

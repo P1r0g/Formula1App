@@ -21,7 +21,11 @@
     <string name="error_registration_required">Create an account first</string>
     <string name="error_invalid_credentials">Incorrect username or password</string>
     <string name="standings_title">Driver standings</string>
-    <string name="standings_demo_note">Demo data</string>
+    <string name="standings_refresh">Refresh</string>
+    <string name="standings_load_more">Load more</string>
+    <string name="standings_retry">Retry</string>
+    <string name="standings_no_internet">No internet connection</string>
+    <string name="standings_load_failed">Could not load standings. Please try again.</string>
     <string name="settings_action">Settings</string>
     <string name="column_position">Pos.</string>
     <string name="column_driver">Driver</string>

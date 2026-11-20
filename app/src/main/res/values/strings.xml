@@ -21,7 +21,11 @@
     <string name="error_registration_required">Сначала зарегистрируйтесь</string>
     <string name="error_invalid_credentials">Неверный логин или пароль</string>
     <string name="standings_title">Таблица пилотов</string>
-    <string name="standings_demo_note">Демонстрационные данные</string>
+    <string name="standings_refresh">Обновить</string>
+    <string name="standings_load_more">Загрузить ещё</string>
+    <string name="standings_retry">Повторить</string>
+    <string name="standings_no_internet">Нет подключения к интернету</string>
+    <string name="standings_load_failed">Не удалось загрузить таблицу. Попробуйте ещё раз.</string>
     <string name="settings_action">Настройки</string>
     <string name="column_position">Место</string>
     <string name="column_driver">Пилот</string>

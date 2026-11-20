@@ -15,6 +15,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -30,15 +31,20 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.example.formula1app.R
-import com.example.formula1app.data.DriverStanding
+import com.example.formula1app.data.StandingsError
+import com.example.formula1app.data.StandingsUiState
 import com.example.formula1app.ui.teamColor
 import java.text.NumberFormat
 
 @Composable
 fun ContentScreen(
-    standings: List<DriverStanding>,
+    state: StandingsUiState,
+    onRefresh: () -> Unit,
+    onLoadMore: () -> Unit,
+    onRetry: () -> Unit,
     onOpenSettings: () -> Unit
 ) {
+    val standings = state.standings
     val locale = LocalConfiguration.current.locales[0]
 
     val pointsFormat = remember(locale) {
@@ -70,17 +76,36 @@ fun ContentScreen(
                 )
 
                 TextButton(onClick = onOpenSettings) {
-                    Text(
-                        text = stringResource(R.string.settings_action)
-                    )
+                    Text(stringResource(R.string.settings_action))
                 }
             }
 
-            Text(
-                text = stringResource(R.string.standings_demo_note),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+            TextButton(
+                onClick = onRefresh,
+                enabled = !state.isLoading
+            ) {
+                Text(stringResource(R.string.standings_refresh))
+            }
+
+            if (state.isLoading) {
+                LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+            }
+
+            state.error?.let { error ->
+                val message = when (error) {
+                    StandingsError.NO_INTERNET -> R.string.standings_no_internet
+                    StandingsError.LOAD_FAILED -> R.string.standings_load_failed
+                }
+
+                Text(
+                    text = stringResource(message),
+                    color = MaterialTheme.colorScheme.error
+                )
+
+                TextButton(onClick = onRetry) {
+                    Text(stringResource(R.string.standings_retry))
+                }
+            }
 
             if (standings.isEmpty()) {
                 Box(
@@ -89,11 +114,13 @@ fun ContentScreen(
                         .weight(1f),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text(
-                        text = stringResource(R.string.standings_empty),
-                        textAlign = TextAlign.Center,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                    if (!state.isLoading && state.error == null) {
+                        Text(
+                            text = stringResource(R.string.standings_empty),
+                            textAlign = TextAlign.Center,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
                 }
             } else {
                 StandingColumns(
@@ -123,8 +150,7 @@ fun ContentScreen(
                                 color = teamColor(standing.teamId)
                             ),
                             colors = CardDefaults.cardColors(
-                                containerColor =
-                                    MaterialTheme.colorScheme.surface
+                                containerColor = MaterialTheme.colorScheme.surface
                             )
                         ) {
                             StandingColumns(
@@ -133,6 +159,18 @@ fun ContentScreen(
                                 team = standing.teamName,
                                 points = pointsFormat.format(standing.points)
                             )
+                        }
+                    }
+
+                    if (state.nextOffset != null && state.error == null) {
+                        item {
+                            TextButton(
+                                onClick = onLoadMore,
+                                enabled = !state.isLoading,
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Text(stringResource(R.string.standings_load_more))
+                            }
                         }
                     }
                 }

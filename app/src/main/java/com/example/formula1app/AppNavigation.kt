@@ -11,12 +11,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import com.example.formula1app.data.AppState
+import com.example.formula1app.data.StandingsViewModel
 import com.example.formula1app.screens.ContentScreen
 import com.example.formula1app.screens.RegistrationScreen
 import com.example.formula1app.screens.SettingsScreen
@@ -65,10 +67,10 @@ sealed interface AppDestination : NavKey {
 
 @Composable
 fun AppNavigation(
+    standingsViewModel: StandingsViewModel,
     onExit: () -> Unit
 ) {
     val lifecycleLogger = remember { ScreenLifecycleLogger() }
-
     val backStack = rememberNavBackStack(AppDestination.Start)
 
     var initialLogin by rememberSaveable {
@@ -79,8 +81,7 @@ fun AppNavigation(
         mutableStateOf(0)
     }
 
-    // Профиль пока хранится только в памяти процесса.
-    // Если процесс был завершён, возвращаем пользователя к входу.
+    // После завершения процесса профиль теряется, поэтому возвращаемся ко входу.
     LaunchedEffect(AppState.userProfile) {
         val hasProtectedScreens = backStack.any { destination ->
             destination == AppDestination.Content ||
@@ -140,20 +141,14 @@ fun AppNavigation(
 
                 RegistrationScreen(
                     onRegistrationComplete = { registeredLogin ->
-                        if (
-                            backStack.lastOrNull() ==
-                            AppDestination.Registration
-                        ) {
+                        if (backStack.lastOrNull() == AppDestination.Registration) {
                             initialLogin = registeredLogin
                             loginFormVersion++
                             navigateBack()
                         }
                     },
                     onBack = {
-                        if (
-                            backStack.lastOrNull() ==
-                            AppDestination.Registration
-                        ) {
+                        if (backStack.lastOrNull() == AppDestination.Registration) {
                             navigateBack()
                         }
                     }
@@ -163,8 +158,20 @@ fun AppNavigation(
             entry<AppDestination.Content> {
                 lifecycleLogger.Observe("ContentScreen")
 
+                val state by standingsViewModel.uiState.collectAsStateWithLifecycle()
+                val hasProfile = AppState.userProfile != null
+
+                LaunchedEffect(standingsViewModel, hasProfile) {
+                    if (hasProfile) {
+                        standingsViewModel.loadIfNeeded()
+                    }
+                }
+
                 ContentScreen(
-                    standings = AppState.standings,
+                    state = state,
+                    onRefresh = standingsViewModel::refresh,
+                    onLoadMore = standingsViewModel::loadMore,
+                    onRetry = standingsViewModel::retry,
                     onOpenSettings = {
                         if (backStack.lastOrNull() == AppDestination.Content) {
                             backStack.add(AppDestination.Settings)
@@ -177,6 +184,7 @@ fun AppNavigation(
                 lifecycleLogger.Observe("SettingsScreen")
 
                 SettingsScreen(
+                    standingsViewModel = standingsViewModel,
                     onBack = {
                         if (backStack.lastOrNull() == AppDestination.Settings) {
                             navigateBack()

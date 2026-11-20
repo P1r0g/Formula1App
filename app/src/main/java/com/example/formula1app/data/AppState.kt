@@ -8,10 +8,6 @@ object AppState {
 
     var userProfile: UserProfile? by mutableStateOf(null)
 
-    var standings: List<DriverStanding> by mutableStateOf(
-        DemoStandings.items
-    )
-
     var darkTheme: Boolean? by mutableStateOf(null)
 
     var languageCode: String by mutableStateOf("ru")
@@ -19,7 +15,7 @@ object AppState {
     var standingsBackup: StandingsBackup? by mutableStateOf(null)
         private set
 
-    fun createBackup(): Boolean {
+    fun createBackup(standings: List<DriverStanding>): Boolean {
         val currentStandings = standings
 
         if (currentStandings.isEmpty()) {
@@ -31,13 +27,6 @@ object AppState {
             createdAtMillis = System.currentTimeMillis()
         )
 
-        return true
-    }
-
-    fun restoreBackup(): Boolean {
-        val backup = standingsBackup ?: return false
-
-        standings = backup.standings.toList()
         return true
     }
 
