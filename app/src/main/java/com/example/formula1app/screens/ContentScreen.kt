@@ -128,7 +128,7 @@ fun ContentScreen(
                             )
                         ) {
                             StandingColumns(
-                                position = standing.position.toString(),
+                                position = standing.position?.toString() ?: "—",
                                 driver = standing.driverName,
                                 team = standing.teamName,
                                 points = pointsFormat.format(standing.points)
