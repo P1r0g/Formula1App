@@ -8,9 +8,11 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import java.io.IOException
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 enum class StandingsError {
     NO_INTERNET,
@@ -23,11 +25,13 @@ data class StandingsUiState(
     val round: String? = null,
     val nextOffset: Int? = null,
     val isLoading: Boolean = false,
-    val error: StandingsError? = null
+    val error: StandingsError? = null,
+    val showingSavedStandings: Boolean = false
 )
 
 class StandingsViewModel(application: Application) : AndroidViewModel(application) {
     private val repository = StandingsRepository()
+    private val storage = StandingsStorage(application)
     private val connectivity = application.getSystemService(ConnectivityManager::class.java)
 
     private val _uiState = MutableStateFlow(StandingsUiState())
@@ -52,18 +56,44 @@ class StandingsViewModel(application: Application) : AndroidViewModel(applicatio
         failedOffset?.let { loadPage(it) }
     }
 
-    private fun loadPage(offset: Int) {
-        val previous = _uiState.value
-        if (previous.isLoading) return
+    fun restoreStandings(standings: List<DriverStanding>): Boolean {
+        if (_uiState.value.isLoading) return false
 
         hasRequested = true
         failedOffset = null
-        _uiState.value = previous.copy(isLoading = true, error = null)
+        _uiState.value = StandingsUiState(
+            standings = standings,
+            showingSavedStandings = true
+        )
+        return true
+    }
+
+    private fun loadPage(offset: Int) {
+        val initial = _uiState.value
+        if (initial.isLoading) return
+
+        val firstRequest = !hasRequested
+        hasRequested = true
+        failedOffset = null
+        _uiState.value = initial.copy(isLoading = true, error = null)
 
         viewModelScope.launch {
+            var previous = initial
             var requestedOffset = offset
 
             try {
+                if (firstRequest) {
+                    val saved = withContext(Dispatchers.IO) { storage.readCache() }
+                    if (saved != null && saved.standings.isNotEmpty()) {
+                        previous = previous.copy(
+                            standings = saved.standings,
+                            showingSavedStandings = true
+                        )
+                        _uiState.value = previous.copy(isLoading = true)
+                        Log.d(TAG, "Restored cache, rows=${saved.standings.size}")
+                    }
+                }
+
                 var page = repository.loadPage(requestedOffset)
 
                 if (requestedOffset > 0 && page.season != null &&
@@ -79,13 +109,28 @@ class StandingsViewModel(application: Application) : AndroidViewModel(applicatio
                     previous.standings + page.standings
                 }
 
-                _uiState.value = StandingsUiState(
+                val state = StandingsUiState(
                     standings = standings.distinctBy { it.driverId },
                     season = page.season ?: previous.season.takeIf { requestedOffset > 0 },
                     round = page.round ?: previous.round.takeIf { requestedOffset > 0 },
                     nextOffset = page.nextOffset
                 )
 
+                if (state.standings.isNotEmpty()) {
+                    try {
+                        withContext(Dispatchers.IO) {
+                            storage.saveCache(
+                                StandingsBackup(state.standings, System.currentTimeMillis())
+                            )
+                        }
+                    } catch (error: CancellationException) {
+                        throw error
+                    } catch (error: Exception) {
+                        Log.w(TAG, "Failed to save standings cache", error)
+                    }
+                }
+
+                _uiState.value = state
                 Log.d(TAG, "Loaded offset=$requestedOffset, rows=${page.standings.size}")
             } catch (error: CancellationException) {
                 throw error
@@ -111,14 +156,5 @@ class StandingsViewModel(application: Application) : AndroidViewModel(applicatio
 
     private companion object {
         const val TAG = "F1Standings"
-    }
-
-    fun restoreStandings(standings: List<DriverStanding>): Boolean {
-        if (_uiState.value.isLoading) return false
-
-        hasRequested = true
-        failedOffset = null
-        _uiState.value = StandingsUiState(standings = standings)
-        return true
     }
 }

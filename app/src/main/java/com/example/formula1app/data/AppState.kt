@@ -1,10 +1,12 @@
 package com.example.formula1app.data
 
+import android.content.Context
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 
 object AppState {
+    private lateinit var standingsStorage: StandingsStorage
 
     var userProfile: UserProfile? by mutableStateOf(null)
 
@@ -15,22 +17,27 @@ object AppState {
     var standingsBackup: StandingsBackup? by mutableStateOf(null)
         private set
 
+    fun initializeStandingsStorage(context: Context) {
+        if (::standingsStorage.isInitialized) return
+
+        standingsStorage = StandingsStorage(context)
+        standingsBackup = standingsStorage.readManualBackup()
+    }
+
     fun createBackup(standings: List<DriverStanding>): Boolean {
-        val currentStandings = standings
+        if (standings.isEmpty()) return false
 
-        if (currentStandings.isEmpty()) {
-            return false
-        }
-
-        standingsBackup = StandingsBackup(
-            standings = currentStandings.toList(),
+        val backup = StandingsBackup(
+            standings = standings.toList(),
             createdAtMillis = System.currentTimeMillis()
         )
-
+        standingsStorage.saveManualBackup(backup)
+        standingsBackup = backup
         return true
     }
 
     fun deleteBackup() {
+        standingsStorage.deleteManualBackup()
         standingsBackup = null
     }
 }

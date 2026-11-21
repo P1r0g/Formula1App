@@ -1,5 +1,8 @@
 package com.example.formula1app.data
 
+import kotlinx.serialization.Serializable
+
+@Serializable
 data class DriverStanding(
     val driverId: String,
     val position: Int?,

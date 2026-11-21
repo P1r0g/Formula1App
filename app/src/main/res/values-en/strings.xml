@@ -54,4 +54,5 @@
     <string name="backup_saved">Standings backup saved</string>
     <string name="backup_restored">Standings restored from backup</string>
     <string name="backup_deleted">Backup deleted</string>
+    <string name="standings_saved_notice">Showing saved standings</string>
 </resources>

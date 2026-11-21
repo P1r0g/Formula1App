@@ -91,6 +91,14 @@ fun ContentScreen(
                 LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
             }
 
+            if (state.showingSavedStandings) {
+                Text(
+                    text = stringResource(R.string.standings_saved_notice),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+
             state.error?.let { error ->
                 val message = when (error) {
                     StandingsError.NO_INTERNET -> R.string.standings_no_internet

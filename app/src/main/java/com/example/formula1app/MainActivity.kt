@@ -6,6 +6,7 @@ import androidx.activity.enableEdgeToEdge
 import com.example.formula1app.ui.Formula1AppTheme
 import androidx.activity.viewModels
 import com.example.formula1app.data.StandingsViewModel
+import com.example.formula1app.data.AppState
 
 class MainActivity : BaseActivity() {
 
@@ -13,6 +14,7 @@ class MainActivity : BaseActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        AppState.initializeStandingsStorage(applicationContext)
         enableEdgeToEdge()
 
         setContent {

@@ -54,4 +54,5 @@
     <string name="backup_saved">Копия таблицы сохранена</string>
     <string name="backup_restored">Таблица восстановлена из копии</string>
     <string name="backup_deleted">Резервная копия удалена</string>
+    <string name="standings_saved_notice">Показана сохранённая таблица</string>
 </resources>
