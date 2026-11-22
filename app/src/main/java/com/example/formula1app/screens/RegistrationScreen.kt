@@ -19,6 +19,8 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -30,6 +32,10 @@ import com.example.formula1app.R
 import com.example.formula1app.data.AppState
 import com.example.formula1app.data.UserProfile
 import com.example.formula1app.ui.Validation
+import java.io.IOException
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.launch
 
 @Composable
 fun RegistrationScreen(
@@ -38,19 +44,17 @@ fun RegistrationScreen(
 ) {
     var email by rememberSaveable { mutableStateOf("") }
     var login by rememberSaveable { mutableStateOf("") }
-    var password by rememberSaveable { mutableStateOf("") }
-    var confirmation by rememberSaveable { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
+    var confirmation by remember { mutableStateOf("") }
     var showErrors by rememberSaveable { mutableStateOf(false) }
 
-    val emailError =
-        if (showErrors) Validation.emailError(email) else null
+    val scope = rememberCoroutineScope()
+    var saving by remember { mutableStateOf(false) }
+    var saveFailed by remember { mutableStateOf(false) }
 
-    val loginError =
-        if (showErrors) Validation.loginError(login) else null
-
-    val passwordError =
-        if (showErrors) Validation.passwordError(password) else null
-
+    val emailError = if (showErrors) Validation.emailError(email) else null
+    val loginError = if (showErrors) Validation.loginError(login) else null
+    val passwordError = if (showErrors) Validation.passwordError(password) else null
     val confirmationError = if (showErrors) {
         Validation.confirmationError(password, confirmation)
     } else {
@@ -67,15 +71,23 @@ fun RegistrationScreen(
             Validation.confirmationError(password, confirmation)
         )
 
-        if (errors.all { it == null }) {
-            val profile = UserProfile(
-                email = email.trim(),
-                login = login.trim(),
-                password = password
-            )
+        if (errors.all { it == null } && !saving) {
+            val profile = UserProfile(email = email.trim(), login = login.trim())
+            val enteredPassword = password
+            saving = true
+            saveFailed = false
 
-            AppState.userProfile = profile
-            onRegistrationComplete(profile.login)
+            scope.launch {
+                try {
+                    AppState.saveProfile(profile, enteredPassword)
+                    currentCoroutineContext().ensureActive()
+                    onRegistrationComplete(profile.login)
+                } catch (_: IOException) {
+                    saveFailed = true
+                } finally {
+                    saving = false
+                }
+            }
         }
     }
 
@@ -97,49 +109,42 @@ fun RegistrationScreen(
 
             OutlinedTextField(
                 value = email,
+                enabled = !saving,
                 onValueChange = { email = it },
                 modifier = Modifier.fillMaxWidth(),
-                label = {
-                    Text(stringResource(R.string.email_label))
-                },
+                label = { Text(stringResource(R.string.email_label)) },
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Email
                 ),
                 isError = emailError != null,
                 supportingText = {
-                    emailError?.let {
-                        Text(stringResource(it))
-                    }
+                    emailError?.let { Text(stringResource(it)) }
                 }
             )
 
             OutlinedTextField(
                 value = login,
+                enabled = !saving,
                 onValueChange = { login = it },
                 modifier = Modifier.fillMaxWidth(),
-                label = {
-                    Text(stringResource(R.string.login_label))
-                },
+                label = { Text(stringResource(R.string.login_label)) },
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Ascii
                 ),
                 isError = loginError != null,
                 supportingText = {
-                    loginError?.let {
-                        Text(stringResource(it))
-                    }
+                    loginError?.let { Text(stringResource(it)) }
                 }
             )
 
             OutlinedTextField(
                 value = password,
+                enabled = !saving,
                 onValueChange = { password = it },
                 modifier = Modifier.fillMaxWidth(),
-                label = {
-                    Text(stringResource(R.string.password_label))
-                },
+                label = { Text(stringResource(R.string.password_label)) },
                 singleLine = true,
                 visualTransformation = PasswordVisualTransformation(),
                 keyboardOptions = KeyboardOptions(
@@ -147,19 +152,16 @@ fun RegistrationScreen(
                 ),
                 isError = passwordError != null,
                 supportingText = {
-                    passwordError?.let {
-                        Text(stringResource(it))
-                    }
+                    passwordError?.let { Text(stringResource(it)) }
                 }
             )
 
             OutlinedTextField(
                 value = confirmation,
+                enabled = !saving,
                 onValueChange = { confirmation = it },
                 modifier = Modifier.fillMaxWidth(),
-                label = {
-                    Text(stringResource(R.string.confirmation_label))
-                },
+                label = { Text(stringResource(R.string.confirmation_label)) },
                 singleLine = true,
                 visualTransformation = PasswordVisualTransformation(),
                 keyboardOptions = KeyboardOptions(
@@ -167,14 +169,20 @@ fun RegistrationScreen(
                 ),
                 isError = confirmationError != null,
                 supportingText = {
-                    confirmationError?.let {
-                        Text(stringResource(it))
-                    }
+                    confirmationError?.let { Text(stringResource(it)) }
                 }
             )
 
+            if (saveFailed) {
+                Text(
+                    text = stringResource(R.string.error_profile_save_failed),
+                    color = MaterialTheme.colorScheme.error
+                )
+            }
+
             Button(
                 onClick = registerUser,
+                enabled = !saving,
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text(stringResource(R.string.register_action))

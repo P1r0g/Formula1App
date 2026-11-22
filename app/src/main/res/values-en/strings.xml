@@ -55,4 +55,6 @@
     <string name="backup_restored">Standings restored from backup</string>
     <string name="backup_deleted">Backup deleted</string>
     <string name="standings_saved_notice">Showing saved standings</string>
+    <string name="error_profile_save_failed">Could not save the profile. Try again.</string>
+    <string name="error_appearance_save_failed">Could not save the theme or language. Try again.</string>
 </resources>

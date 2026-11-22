@@ -32,6 +32,13 @@ import com.example.formula1app.data.AppState
 import com.example.formula1app.ui.BackupSettingsCard
 import com.example.formula1app.ui.ProfileSettingsCard
 import com.example.formula1app.data.StandingsViewModel
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
+import java.io.IOException
+import kotlinx.coroutines.launch
 
 @Composable
 fun SettingsScreen(
@@ -39,6 +46,19 @@ fun SettingsScreen(
     onBack: () -> Unit
 ) {
     val darkTheme = AppState.darkTheme ?: isSystemInDarkTheme()
+    val scope = rememberCoroutineScope()
+    var saveFailed by remember { mutableStateOf(false) }
+
+    fun saveAppearance(save: suspend () -> Unit) {
+        saveFailed = false
+        scope.launch {
+            try {
+                save()
+            } catch (_: IOException) {
+                saveFailed = true
+            }
+        }
+    }
 
     Scaffold(
         modifier = Modifier.fillMaxSize()
@@ -63,9 +83,7 @@ fun SettingsScreen(
             if (profile != null) {
                 ProfileSettingsCard(
                     profile = profile,
-                    onSave = { updatedProfile ->
-                        AppState.userProfile = updatedProfile
-                    }
+                    onSave = AppState::saveProfile
                 )
             }
 
@@ -97,7 +115,7 @@ fun SettingsScreen(
                         Switch(
                             checked = darkTheme,
                             onCheckedChange = { checked ->
-                                AppState.darkTheme = checked
+                                saveAppearance { AppState.updateDarkTheme(checked) }
                             }
                         )
                     }
@@ -126,7 +144,7 @@ fun SettingsScreen(
                             label = stringResource(R.string.language_russian),
                             selected = AppState.languageCode == "ru",
                             onSelect = {
-                                AppState.languageCode = "ru"
+                                saveAppearance { AppState.updateLanguage("ru") }
                             }
                         )
 
@@ -134,11 +152,17 @@ fun SettingsScreen(
                             label = stringResource(R.string.language_english),
                             selected = AppState.languageCode == "en",
                             onSelect = {
-                                AppState.languageCode = "en"
+                                saveAppearance { AppState.updateLanguage("en") }
                             }
                         )
                     }
                 }
+            }
+            if (saveFailed) {
+                Text(
+                    text = stringResource(R.string.error_appearance_save_failed),
+                    color = MaterialTheme.colorScheme.error
+                )
             }
             BackupSettingsCard(standingsViewModel)
 

@@ -19,6 +19,8 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -29,6 +31,7 @@ import androidx.compose.ui.unit.dp
 import com.example.formula1app.R
 import com.example.formula1app.data.AppState
 import com.example.formula1app.ui.Validation
+import kotlinx.coroutines.launch
 
 @Composable
 fun StartScreen(
@@ -37,17 +40,15 @@ fun StartScreen(
     onLoginSuccess: () -> Unit
 ) {
     var login by rememberSaveable { mutableStateOf(initialLogin) }
-    var password by rememberSaveable { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
     var showErrors by rememberSaveable { mutableStateOf(false) }
-    var authenticationError by rememberSaveable {
-        mutableStateOf<Int?>(null)
-    }
+    var authenticationError by rememberSaveable { mutableStateOf<Int?>(null) }
 
-    val loginError =
-        if (showErrors) Validation.loginError(login) else null
+    val scope = rememberCoroutineScope()
+    var signingIn by remember { mutableStateOf(false) }
 
-    val passwordError =
-        if (showErrors) Validation.passwordError(password) else null
+    val loginError = if (showErrors) Validation.loginError(login) else null
+    val passwordError = if (showErrors) Validation.passwordError(password) else null
 
     val signIn: () -> Unit = {
         showErrors = true
@@ -57,23 +58,28 @@ fun StartScreen(
             Validation.loginError(login) == null &&
                     Validation.passwordError(password) == null
 
-        if (fieldsAreValid) {
-            val profile = AppState.userProfile
+        if (fieldsAreValid && !signingIn) {
+            val enteredLogin = login.trim()
+            val enteredPassword = password
+            signingIn = true
 
-            when {
-                profile == null -> {
-                    authenticationError =
-                        R.string.error_registration_required
-                }
+            scope.launch {
+                try {
+                    when {
+                        AppState.userProfile == null -> {
+                            authenticationError = R.string.error_registration_required
+                        }
 
-                profile.login != login.trim() ||
-                        profile.password != password -> {
-                    authenticationError =
-                        R.string.error_invalid_credentials
-                }
+                        AppState.matchesCredentials(enteredLogin, enteredPassword) -> {
+                            onLoginSuccess()
+                        }
 
-                else -> {
-                    onLoginSuccess()
+                        else -> {
+                            authenticationError = R.string.error_invalid_credentials
+                        }
+                    }
+                } finally {
+                    signingIn = false
                 }
             }
         }
@@ -95,42 +101,36 @@ fun StartScreen(
                 style = MaterialTheme.typography.headlineMedium
             )
 
-            Text(
-                text = stringResource(R.string.start_description)
-            )
+            Text(text = stringResource(R.string.start_description))
 
             OutlinedTextField(
                 value = login,
+                enabled = !signingIn,
                 onValueChange = {
                     login = it
                     authenticationError = null
                 },
                 modifier = Modifier.fillMaxWidth(),
-                label = {
-                    Text(stringResource(R.string.login_label))
-                },
+                label = { Text(stringResource(R.string.login_label)) },
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Ascii
                 ),
                 isError = loginError != null,
                 supportingText = {
-                    loginError?.let {
-                        Text(stringResource(it))
-                    }
+                    loginError?.let { Text(stringResource(it)) }
                 }
             )
 
             OutlinedTextField(
                 value = password,
+                enabled = !signingIn,
                 onValueChange = {
                     password = it
                     authenticationError = null
                 },
                 modifier = Modifier.fillMaxWidth(),
-                label = {
-                    Text(stringResource(R.string.password_label))
-                },
+                label = { Text(stringResource(R.string.password_label)) },
                 singleLine = true,
                 visualTransformation = PasswordVisualTransformation(),
                 keyboardOptions = KeyboardOptions(
@@ -138,9 +138,7 @@ fun StartScreen(
                 ),
                 isError = passwordError != null,
                 supportingText = {
-                    passwordError?.let {
-                        Text(stringResource(it))
-                    }
+                    passwordError?.let { Text(stringResource(it)) }
                 }
             )
 
@@ -153,6 +151,7 @@ fun StartScreen(
 
             Button(
                 onClick = signIn,
+                enabled = !signingIn,
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text(stringResource(R.string.login_action))
@@ -160,6 +159,7 @@ fun StartScreen(
 
             TextButton(
                 onClick = onOpenRegistration,
+                enabled = !signingIn,
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text(stringResource(R.string.registration_action))

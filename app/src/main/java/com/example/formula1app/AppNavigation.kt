@@ -25,29 +25,6 @@ import com.example.formula1app.screens.SettingsScreen
 import com.example.formula1app.screens.StartScreen
 import kotlinx.serialization.Serializable
 
-/*
-Старая навигация из лабораторной 1.
-
-StartActivity -> RegistrationActivity:
-registrationLauncher.launch(
-    Intent(this@StartActivity, RegistrationActivity::class.java)
-)
-
-StartActivity -> ContentActivity:
-startActivity(Intent(this@StartActivity, ContentActivity::class.java))
-finish()
-
-RegistrationActivity -> StartActivity с результатом:
-val result = Intent().putExtra(EXTRA_LOGIN, registeredLogin)
-setResult(Activity.RESULT_OK, result)
-finish()
-
-ContentActivity -> SettingsActivity:
-startActivity(Intent(this@ContentActivity, SettingsActivity::class.java))
-
-Возврат из регистрации или настроек:
-finish()
-*/
 
 @Serializable
 sealed interface AppDestination : NavKey {
@@ -67,8 +44,7 @@ sealed interface AppDestination : NavKey {
 
 @Composable
 fun AppNavigation(
-    standingsViewModel: StandingsViewModel,
-    onExit: () -> Unit
+    standingsViewModel: StandingsViewModel, onExit: () -> Unit
 ) {
     val lifecycleLogger = remember { ScreenLifecycleLogger() }
     val backStack = rememberNavBackStack(AppDestination.Start)
@@ -81,14 +57,12 @@ fun AppNavigation(
         mutableStateOf(0)
     }
 
-    // После завершения процесса профиль теряется, поэтому возвращаемся ко входу.
-    LaunchedEffect(AppState.userProfile) {
+    LaunchedEffect(AppState.isSignedIn) {
         val hasProtectedScreens = backStack.any { destination ->
-            destination == AppDestination.Content ||
-                    destination == AppDestination.Settings
+            destination == AppDestination.Content || destination == AppDestination.Settings
         }
 
-        if (AppState.userProfile == null && hasProtectedScreens) {
+        if (!AppState.isSignedIn && hasProtectedScreens) {
             backStack.clear()
             backStack.add(AppDestination.Start)
         }
@@ -103,8 +77,7 @@ fun AppNavigation(
     }
 
     BackHandler(
-        enabled = backStack.size == 1,
-        onBack = onExit
+        enabled = backStack.size == 1, onBack = onExit
     )
 
     NavDisplay(
@@ -119,52 +92,44 @@ fun AppNavigation(
                 lifecycleLogger.Observe("StartScreen")
 
                 key(loginFormVersion) {
-                    StartScreen(
-                        initialLogin = initialLogin,
-                        onOpenRegistration = {
-                            if (backStack.lastOrNull() == AppDestination.Start) {
-                                backStack.add(AppDestination.Registration)
-                            }
-                        },
-                        onLoginSuccess = {
-                            if (backStack.lastOrNull() == AppDestination.Start) {
-                                backStack.clear()
-                                backStack.add(AppDestination.Content)
-                            }
+                    StartScreen(initialLogin = initialLogin, onOpenRegistration = {
+                        if (backStack.lastOrNull() == AppDestination.Start) {
+                            backStack.add(AppDestination.Registration)
                         }
-                    )
+                    }, onLoginSuccess = {
+                        if (backStack.lastOrNull() == AppDestination.Start) {
+                            AppState.isSignedIn = true
+                            backStack.clear()
+                            backStack.add(AppDestination.Content)
+                        }
+                    })
                 }
             }
 
             entry<AppDestination.Registration> {
                 lifecycleLogger.Observe("RegistrationScreen")
 
-                RegistrationScreen(
-                    onRegistrationComplete = { registeredLogin ->
-                        if (backStack.lastOrNull() == AppDestination.Registration) {
-                            initialLogin = registeredLogin
-                            loginFormVersion++
-                            navigateBack()
-                        }
-                    },
-                    onBack = {
-                        if (backStack.lastOrNull() == AppDestination.Registration) {
-                            navigateBack()
-                        }
+                RegistrationScreen(onRegistrationComplete = { registeredLogin ->
+                    if (backStack.lastOrNull() == AppDestination.Registration) {
+                        initialLogin = registeredLogin
+                        loginFormVersion++
+                        navigateBack()
                     }
-                )
+                }, onBack = {
+                    if (backStack.lastOrNull() == AppDestination.Registration) {
+                        navigateBack()
+                    }
+                })
             }
 
             entry<AppDestination.Content> {
                 lifecycleLogger.Observe("ContentScreen")
 
-                val state by standingsViewModel.uiState.collectAsStateWithLifecycle()
-                val hasProfile = AppState.userProfile != null
+                if (!AppState.isSignedIn) return@entry
 
-                LaunchedEffect(standingsViewModel, hasProfile) {
-                    if (hasProfile) {
-                        standingsViewModel.loadIfNeeded()
-                    }
+                val state by standingsViewModel.uiState.collectAsStateWithLifecycle()
+                LaunchedEffect(standingsViewModel) {
+                    standingsViewModel.loadIfNeeded()
                 }
 
                 ContentScreen(
@@ -176,22 +141,24 @@ fun AppNavigation(
                         if (backStack.lastOrNull() == AppDestination.Content) {
                             backStack.add(AppDestination.Settings)
                         }
-                    }
-                )
+                    })
             }
 
             entry<AppDestination.Settings> {
                 lifecycleLogger.Observe("SettingsScreen")
+                if (!AppState.isSignedIn) return@entry
+
+                val state by standingsViewModel.uiState.collectAsStateWithLifecycle()
+                LaunchedEffect(standingsViewModel) {
+                    standingsViewModel.loadIfNeeded()
+                }
 
                 SettingsScreen(
-                    standingsViewModel = standingsViewModel,
-                    onBack = {
+                    standingsViewModel = standingsViewModel, onBack = {
                         if (backStack.lastOrNull() == AppDestination.Settings) {
                             navigateBack()
                         }
-                    }
-                )
+                    })
             }
-        }
-    )
+        })
 }

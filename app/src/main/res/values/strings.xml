@@ -55,4 +55,6 @@
     <string name="backup_restored">Таблица восстановлена из копии</string>
     <string name="backup_deleted">Резервная копия удалена</string>
     <string name="standings_saved_notice">Показана сохранённая таблица</string>
+    <string name="error_profile_save_failed">Не удалось сохранить профиль. Попробуйте ещё раз.</string>
+    <string name="error_appearance_save_failed">Не удалось сохранить тему или язык. Попробуйте ещё раз.</string>
 </resources>
