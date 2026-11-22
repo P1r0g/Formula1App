@@ -32,6 +32,7 @@ data class StandingsUiState(
 class StandingsViewModel(application: Application) : AndroidViewModel(application) {
     private val repository = StandingsRepository()
     private val storage = StandingsStorage(application)
+    private val fileStorage = StandingsFileStorage(application)
     private val connectivity = application.getSystemService(ConnectivityManager::class.java)
 
     private val _uiState = MutableStateFlow(StandingsUiState())
@@ -117,16 +118,25 @@ class StandingsViewModel(application: Application) : AndroidViewModel(applicatio
                 )
 
                 if (state.standings.isNotEmpty()) {
+                    val snapshot = StandingsBackup(state.standings, System.currentTimeMillis())
+
                     try {
                         withContext(Dispatchers.IO) {
-                            storage.saveCache(
-                                StandingsBackup(state.standings, System.currentTimeMillis())
-                            )
+                            storage.saveCache(snapshot)
                         }
                     } catch (error: CancellationException) {
                         throw error
                     } catch (error: Exception) {
                         Log.w(TAG, "Failed to save standings cache", error)
+                    }
+
+                    try {
+                        fileStorage.write(snapshot)
+                        Log.d(TAG, "Exported standings to Downloads, rows=${snapshot.standings.size}")
+                    } catch (error: CancellationException) {
+                        throw error
+                    } catch (error: Exception) {
+                        Log.w(TAG, "Failed to export standings to Downloads", error)
                     }
                 }
 

@@ -24,6 +24,14 @@ import com.example.formula1app.screens.RegistrationScreen
 import com.example.formula1app.screens.SettingsScreen
 import com.example.formula1app.screens.StartScreen
 import kotlinx.serialization.Serializable
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
+import androidx.activity.compose.BackHandler
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.ui.platform.LocalContext
+import androidx.core.content.ContextCompat
 
 
 @Serializable
@@ -48,6 +56,15 @@ fun AppNavigation(
 ) {
     val lifecycleLogger = remember { ScreenLifecycleLogger() }
     val backStack = rememberNavBackStack(AppDestination.Start)
+    val context = LocalContext.current
+    var storagePermissionRequested by rememberSaveable { mutableStateOf(false) }
+    var waitingForStoragePermission by rememberSaveable { mutableStateOf(false) }
+    val storagePermissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) {
+        waitingForStoragePermission = false
+        if (AppState.isSignedIn) standingsViewModel.loadIfNeeded()
+    }
 
     var initialLogin by rememberSaveable {
         mutableStateOf(AppState.userProfile?.login.orEmpty())
@@ -129,7 +146,22 @@ fun AppNavigation(
 
                 val state by standingsViewModel.uiState.collectAsStateWithLifecycle()
                 LaunchedEffect(standingsViewModel) {
-                    standingsViewModel.loadIfNeeded()
+                    if (waitingForStoragePermission) return@LaunchedEffect
+
+                    val needsStoragePermission =
+                        Build.VERSION.SDK_INT <= Build.VERSION_CODES.P &&
+                                ContextCompat.checkSelfPermission(
+                                    context,
+                                    Manifest.permission.WRITE_EXTERNAL_STORAGE
+                                ) != PackageManager.PERMISSION_GRANTED
+
+                    if (needsStoragePermission && !storagePermissionRequested) {
+                        storagePermissionRequested = true
+                        waitingForStoragePermission = true
+                        storagePermissionLauncher.launch(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                    } else {
+                        standingsViewModel.loadIfNeeded()
+                    }
                 }
 
                 ContentScreen(

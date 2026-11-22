@@ -8,6 +8,8 @@ import androidx.activity.viewModels
 import androidx.compose.runtime.LaunchedEffect
 import com.example.formula1app.data.StandingsViewModel
 import com.example.formula1app.data.AppState
+import androidx.activity.compose.LocalActivityResultRegistryOwner
+import androidx.compose.runtime.CompositionLocalProvider
 
 class MainActivity : BaseActivity() {
 
@@ -22,11 +24,15 @@ class MainActivity : BaseActivity() {
             LaunchedEffect(Unit) { AppState.observeUserSettings() }
 
             if (AppState.settingsLoaded) {
-                Formula1AppTheme {
-                    AppNavigation(
-                        standingsViewModel = standingsViewModel,
-                        onExit = { finish() }
-                    )
+                CompositionLocalProvider(
+                    LocalActivityResultRegistryOwner provides this@MainActivity
+                ) {
+                    Formula1AppTheme {
+                        AppNavigation(
+                            standingsViewModel = standingsViewModel,
+                            onExit = { finish() }
+                        )
+                    }
                 }
             }
         }
