@@ -69,6 +69,12 @@ class StandingsViewModel(application: Application) : AndroidViewModel(applicatio
         return true
     }
 
+    suspend fun readFileStatus() = fileStorage.readStatus()
+
+    suspend fun deleteExportedFile() = fileStorage.deleteToBackup()
+
+    suspend fun restoreExportedFile() = fileStorage.restoreFromBackup()
+
     private fun loadPage(offset: Int) {
         val initial = _uiState.value
         if (initial.isLoading) return
@@ -131,8 +137,9 @@ class StandingsViewModel(application: Application) : AndroidViewModel(applicatio
                     }
 
                     try {
-                        fileStorage.write(snapshot)
-                        Log.d(TAG, "Exported standings to Downloads, rows=${snapshot.standings.size}")
+                        if (fileStorage.write(snapshot)) {
+                            Log.d(TAG,"Exported standings to Downloads, rows=${snapshot.standings.size}")
+                        }
                     } catch (error: CancellationException) {
                         throw error
                     } catch (error: Exception) {

@@ -39,6 +39,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import java.io.IOException
 import kotlinx.coroutines.launch
+import com.example.formula1app.ui.StandingsFileCard
 
 @Composable
 fun SettingsScreen(
@@ -164,6 +165,7 @@ fun SettingsScreen(
                     color = MaterialTheme.colorScheme.error
                 )
             }
+            StandingsFileCard(standingsViewModel)
             BackupSettingsCard(standingsViewModel)
 
             OutlinedButton(

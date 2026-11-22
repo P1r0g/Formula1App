@@ -57,4 +57,12 @@
     <string name="standings_saved_notice">Showing saved standings</string>
     <string name="error_profile_save_failed">Could not save the profile. Try again.</string>
     <string name="error_appearance_save_failed">Could not save the theme or language. Try again.</string>
+    <string name="export_file_title">File in Downloads</string>
+    <string name="export_file_info">%1$s\nSize — %2$d bytes</string>
+    <string name="export_file_modified">Modified %1$s</string>
+    <string name="export_file_missing">There is no file in Downloads</string>
+    <string name="export_backup_available">An internal copy is available to restore</string>
+    <string name="export_file_delete">Delete file from Downloads</string>
+    <string name="export_file_restore">Restore file</string>
+    <string name="export_file_error">The file operation failed</string>
 </resources>

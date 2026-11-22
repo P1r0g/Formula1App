@@ -57,4 +57,12 @@
     <string name="standings_saved_notice">Показана сохранённая таблица</string>
     <string name="error_profile_save_failed">Не удалось сохранить профиль. Попробуйте ещё раз.</string>
     <string name="error_appearance_save_failed">Не удалось сохранить тему или язык. Попробуйте ещё раз.</string>
+    <string name="export_file_title">Файл в «Загрузках»</string>
+    <string name="export_file_info">%1$s\nРазмер — %2$d байт</string>
+    <string name="export_file_modified">Изменён %1$s</string>
+    <string name="export_file_missing">В «Загрузках» файла нет</string>
+    <string name="export_backup_available">Внутренняя копия доступна для восстановления</string>
+    <string name="export_file_delete">Удалить файл из «Загрузок»</string>
+    <string name="export_file_restore">Восстановить файл</string>
+    <string name="export_file_error">Не удалось выполнить операцию с файлом</string>
 </resources>
