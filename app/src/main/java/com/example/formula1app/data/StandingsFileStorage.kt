@@ -8,7 +8,6 @@ import android.os.Build
 import android.os.Environment
 import android.provider.BaseColumns
 import android.provider.MediaStore
-import android.util.AtomicFile
 import androidx.annotation.RequiresApi
 import java.io.File
 import java.io.IOException
@@ -18,6 +17,8 @@ import kotlinx.serialization.json.Json
 import java.io.FileNotFoundException
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import android.util.AtomicFile
+
 
 data class StandingsFileInfo(
     val path: String,
@@ -33,7 +34,7 @@ data class StandingsFileStatus(
 class StandingsFileStorage(context: Context) {
     private val appContext = context.applicationContext
     private val resolver = appContext.contentResolver
-    private val preferences = appContext.getSharedPreferences("f1_export", Context.MODE_PRIVATE)
+    private val downloadUriFile = AtomicFile(File(appContext.filesDir, DOWNLOAD_URI))
     private val json = Json { prettyPrint = true }
     private val fileMutex = Mutex()
     private val internalBackup = AtomicFile(File(appContext.filesDir, FILE_NAME))
@@ -68,7 +69,7 @@ class StandingsFileStorage(context: Context) {
                 if (resolver.delete(uri, null, null) != 1) {
                     throw IOException("Could not delete the exported file")
                 }
-                preferences.edit().remove(DOWNLOAD_URI).apply()
+                downloadUriFile.delete()
             } else {
                 val file = legacyDownloadFile()
                 saveInternalBackup(file.readBytes())
@@ -187,7 +188,7 @@ class StandingsFileStorage(context: Context) {
             if (resolver.update(uri, published, null, null) != 1) {
                 throw IOException("Could not publish the export")
             }
-            preferences.edit().putString(DOWNLOAD_URI, uri.toString()).apply()
+            writeAtomically(downloadUriFile, uri.toString().toByteArray(Charsets.UTF_8))
         } catch (error: Exception) {
             runCatching { resolver.delete(uri, null, null) }
                 .exceptionOrNull()?.let(error::addSuppressed)
@@ -197,7 +198,12 @@ class StandingsFileStorage(context: Context) {
 
     @RequiresApi(Build.VERSION_CODES.Q)
     private fun findDownload(collection: Uri, directory: String): Uri? {
-        val savedUri = preferences.getString(DOWNLOAD_URI, null)?.let(Uri::parse)
+        val savedUri = try {
+            val uriText = downloadUriFile.readFully().decodeToString()
+            uriText.takeIf { it.isNotBlank() }?.let(Uri::parse)
+        } catch (_: IOException) {
+            null
+        }
         val ownedDownload = "${MediaStore.MediaColumns.OWNER_PACKAGE_NAME} = ? AND " +
                 "${MediaStore.MediaColumns.RELATIVE_PATH} = ?"
         val selectionArgs = arrayOf(appContext.packageName, directory)

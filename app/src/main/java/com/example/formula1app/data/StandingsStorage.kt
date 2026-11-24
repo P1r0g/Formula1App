@@ -3,45 +3,57 @@ package com.example.formula1app.data
 import android.content.Context
 import android.util.Log
 import kotlinx.serialization.json.Json
+import java.io.File
+import android.util.AtomicFile
+import java.io.FileNotFoundException
+import java.io.IOException
+
 
 class StandingsStorage(context: Context) {
-    private val preferences = context.applicationContext
-        .getSharedPreferences("f1_standings", Context.MODE_PRIVATE)
+    private val filesDir = context.applicationContext.filesDir
+    private val cacheFile = AtomicFile(File(filesDir, "standings_cache.json"))
+    private val manualBackupFile = AtomicFile(File(filesDir, "standings_manual_backup.json"))
 
-    fun readCache(): StandingsBackup? = read(CACHE_KEY)
+    fun readCache(): StandingsBackup? = read(cacheFile)
 
-    fun saveCache(snapshot: StandingsBackup) {
-        write(CACHE_KEY, snapshot)
-    }
+    fun saveCache(snapshot: StandingsBackup) = write(cacheFile, snapshot)
 
-    fun readManualBackup(): StandingsBackup? = read(BACKUP_KEY)
+    fun readManualBackup(): StandingsBackup? = read(manualBackupFile)
 
-    fun saveManualBackup(snapshot: StandingsBackup) {
-        write(BACKUP_KEY, snapshot)
-    }
+    fun saveManualBackup(snapshot: StandingsBackup) = write(manualBackupFile, snapshot)
 
     fun deleteManualBackup() {
-        preferences.edit().remove(BACKUP_KEY).apply()
+        manualBackupFile.delete()
     }
 
-    private fun read(key: String): StandingsBackup? {
+    private fun read(file: AtomicFile): StandingsBackup? {
         return try {
-            val json = preferences.getString(key, null)
-            json?.let { Json.decodeFromString(StandingsBackup.serializer(), it) }
+            val json = file.readFully().decodeToString()
+            Json.decodeFromString(StandingsBackup.serializer(), json)
+        } catch (_: FileNotFoundException) {
+            null
+        } catch (error: IOException) {
+            Log.w("F1Standings", "Could not read ${file.baseFile.name}", error)
+            null
         } catch (error: IllegalArgumentException) {
-            Log.w("F1Standings", "Could not read $key", error)
+            Log.w("F1Standings", "Invalid JSON in ${file.baseFile.name}", error)
             null
         }
     }
 
-    private fun write(key: String, snapshot: StandingsBackup) {
-        preferences.edit()
-            .putString(key, Json.encodeToString(StandingsBackup.serializer(), snapshot))
-            .apply()
+    private fun write(file: AtomicFile, snapshot: StandingsBackup) {
+        val json = Json.encodeToString(StandingsBackup.serializer(), snapshot)
+        writeAtomically(file, json.encodeToByteArray())
     }
 
-    private companion object {
-        const val CACHE_KEY = "last_loaded_standings"
-        const val BACKUP_KEY = "manual_standings_backup"
+    private fun writeAtomically(file: AtomicFile, bytes: ByteArray) {
+        val output = file.startWrite()
+        try {
+            output.write(bytes)
+            file.finishWrite(output)
+        } catch (error: IOException) {
+            file.failWrite(output)
+            throw error
+        }
     }
 }
