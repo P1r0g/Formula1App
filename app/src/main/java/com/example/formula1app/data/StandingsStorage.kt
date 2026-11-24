@@ -16,7 +16,9 @@ class StandingsStorage(context: Context) {
 
     fun readCache(): StandingsBackup? = read(cacheFile)
 
-    fun saveCache(snapshot: StandingsBackup) = write(cacheFile, snapshot)
+    fun deleteCache() {
+        cacheFile.delete()
+    }
 
     fun readManualBackup(): StandingsBackup? = read(manualBackupFile)
 

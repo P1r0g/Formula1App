@@ -26,6 +26,8 @@ import java.text.DateFormat
 import java.util.Date
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.formula1app.data.StandingsViewModel
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
 
 @Composable
 fun BackupSettingsCard(standingsViewModel: StandingsViewModel) {
@@ -33,6 +35,7 @@ fun BackupSettingsCard(standingsViewModel: StandingsViewModel) {
     val backup = AppState.standingsBackup
     val hasData = state.standings.isNotEmpty()
     val locale = LocalConfiguration.current.locales[0]
+    val scope = rememberCoroutineScope()
 
     var message by remember {
         mutableStateOf<Int?>(null)
@@ -113,8 +116,14 @@ fun BackupSettingsCard(standingsViewModel: StandingsViewModel) {
                 modifier = Modifier.fillMaxWidth(),
                 enabled = backup != null && !state.isLoading,
                 onClick = {
-                    if (backup != null && standingsViewModel.restoreStandings(backup.standings)) {
-                        message = R.string.backup_restored
+                    if (backup != null) {
+                        scope.launch {
+                            message = if (standingsViewModel.restoreStandings(backup.standings)) {
+                                R.string.backup_restored
+                            } else {
+                                R.string.backup_restore_failed
+                            }
+                        }
                     }
                 }
             ) {

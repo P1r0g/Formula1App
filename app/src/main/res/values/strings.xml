@@ -65,4 +65,5 @@
     <string name="export_file_delete">Удалить файл из «Загрузок»</string>
     <string name="export_file_restore">Восстановить файл</string>
     <string name="export_file_error">Не удалось выполнить операцию с файлом</string>
+    <string name="backup_restore_failed">Не удалось восстановить таблицу из копии</string>
 </resources>

@@ -65,4 +65,5 @@
     <string name="export_file_delete">Delete file from Downloads</string>
     <string name="export_file_restore">Restore file</string>
     <string name="export_file_error">The file operation failed</string>
+    <string name="backup_restore_failed">Could not restore standings from backup</string>
 </resources>

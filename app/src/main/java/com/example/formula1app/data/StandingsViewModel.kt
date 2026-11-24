@@ -13,6 +13,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.update
 
 enum class StandingsError {
     NO_INTERNET,
@@ -30,7 +33,9 @@ data class StandingsUiState(
 )
 
 class StandingsViewModel(application: Application) : AndroidViewModel(application) {
-    private val repository = StandingsRepository()
+    private val repository by lazy {
+        StandingsRepository(Formula1Database.getInstance(application))
+    }
     private val storage = StandingsStorage(application)
     private val fileStorage = StandingsFileStorage(application)
     private val connectivity = application.getSystemService(ConnectivityManager::class.java)
@@ -40,33 +45,49 @@ class StandingsViewModel(application: Application) : AndroidViewModel(applicatio
 
     private var hasRequested = false
     private var failedOffset: Int? = null
+    private var standingsObserver: Job? = null
 
     fun loadIfNeeded() {
-        if (!hasRequested) loadPage(0)
+        if (!hasRequested) loadPage(0, onlyIfEmpty = true)
     }
 
-    fun refresh() {
-        loadPage(0)
-    }
+    fun refresh() = loadPage(0)
 
     fun loadMore() {
         _uiState.value.nextOffset?.let { loadPage(it) }
     }
 
     fun retry() {
-        failedOffset?.let { loadPage(it) }
+        val offset = failedOffset
+        loadPage(offset ?: 0, onlyIfEmpty = offset == null)
     }
 
-    fun restoreStandings(standings: List<DriverStanding>): Boolean {
-        if (_uiState.value.isLoading) return false
+    suspend fun restoreStandings(standings: List<DriverStanding>): Boolean {
+        if (_uiState.value.isLoading || standings.isEmpty()) return false
 
-        hasRequested = true
-        failedOffset = null
-        _uiState.value = StandingsUiState(
-            standings = standings,
-            showingSavedStandings = true
-        )
-        return true
+        _uiState.update { it.copy(isLoading = true) }
+        observeStandingsIfNeeded()
+
+        return try {
+            val snapshot = StandingsPage(
+                standings = standings,
+                season = null,
+                round = null,
+                nextOffset = null
+            )
+            repository.savePage(snapshot, offset = 0)
+            hasRequested = true
+            failedOffset = null
+            _uiState.update { it.copy(error = null, showingSavedStandings = true) }
+            true
+        } catch (error: CancellationException) {
+            throw error
+        } catch (error: Exception) {
+            Log.w(TAG, "Failed to restore standings backup", error)
+            false
+        } finally {
+            _uiState.update { it.copy(isLoading = false) }
+        }
     }
 
     suspend fun readFileStatus() = fileStorage.readStatus()
@@ -75,92 +96,102 @@ class StandingsViewModel(application: Application) : AndroidViewModel(applicatio
 
     suspend fun restoreExportedFile() = fileStorage.restoreFromBackup()
 
-    private fun loadPage(offset: Int) {
-        val initial = _uiState.value
-        if (initial.isLoading) return
+    private fun observeStandingsIfNeeded() {
+        if (standingsObserver?.isActive == true) return
 
-        val firstRequest = !hasRequested
+        standingsObserver = viewModelScope.launch {
+            try {
+                repository.observeStandings().collect { page ->
+                    _uiState.update {
+                        it.copy(
+                            standings = page.standings,
+                            season = page.season,
+                            round = page.round,
+                            nextOffset = page.nextOffset
+                        )
+                    }
+                }
+            } catch (error: CancellationException) {
+                throw error
+            } catch (error: Exception) {
+                _uiState.update { it.copy(error = StandingsError.LOAD_FAILED) }
+                Log.w(TAG, "Failed to observe standings in Room", error)
+            }
+        }
+    }
+
+    private fun loadPage(offset: Int, onlyIfEmpty: Boolean = false) {
+        if (_uiState.value.isLoading) return
+
         hasRequested = true
         failedOffset = null
-        _uiState.value = initial.copy(isLoading = true, error = null)
+        _uiState.update { it.copy(isLoading = true, error = null) }
+        observeStandingsIfNeeded()
 
         viewModelScope.launch {
-            var previous = initial
             var requestedOffset = offset
 
             try {
-                if (firstRequest) {
-                    val saved = withContext(Dispatchers.IO) { storage.readCache() }
-                    if (saved != null && saved.standings.isNotEmpty()) {
-                        previous = previous.copy(
-                            standings = saved.standings,
-                            showingSavedStandings = true
-                        )
-                        _uiState.value = previous.copy(isLoading = true)
-                        Log.d(TAG, "Restored cache, rows=${saved.standings.size}")
-                    }
+                if (onlyIfEmpty && loadSavedStandings()) {
+                    _uiState.update { it.copy(showingSavedStandings = true) }
+                    return@launch
+                }
+
+                val current = if (offset > 0) repository.readStandings() else null
+                if (current != null) {
+                    requestedOffset = current.nextOffset ?: return@launch
                 }
 
                 var page = repository.loadPage(requestedOffset)
-
-                if (requestedOffset > 0 && page.season != null &&
-                    (page.season != previous.season || page.round != previous.round)
+                if (current != null && page.season != null &&
+                    (page.season != current.season || page.round != current.round)
                 ) {
                     requestedOffset = 0
                     page = repository.loadPage(requestedOffset)
                 }
 
-                val standings = if (requestedOffset == 0) {
-                    page.standings
-                } else {
-                    previous.standings + page.standings
-                }
-
-                val state = StandingsUiState(
-                    standings = standings.distinctBy { it.driverId },
-                    season = page.season ?: previous.season.takeIf { requestedOffset > 0 },
-                    round = page.round ?: previous.round.takeIf { requestedOffset > 0 },
-                    nextOffset = page.nextOffset
-                )
-
-                if (state.standings.isNotEmpty()) {
-                    val snapshot = StandingsBackup(state.standings, System.currentTimeMillis())
-
-                    try {
-                        withContext(Dispatchers.IO) {
-                            storage.saveCache(snapshot)
-                        }
-                    } catch (error: CancellationException) {
-                        throw error
-                    } catch (error: Exception) {
-                        Log.w(TAG, "Failed to save standings cache", error)
-                    }
-
-                    try {
-                        if (fileStorage.write(snapshot)) {
-                            Log.d(TAG,"Exported standings to Downloads, rows=${snapshot.standings.size}")
-                        }
-                    } catch (error: CancellationException) {
-                        throw error
-                    } catch (error: Exception) {
-                        Log.w(TAG, "Failed to export standings to Downloads", error)
-                    }
-                }
-
-                _uiState.value = state
-                Log.d(TAG, "Loaded offset=$requestedOffset, rows=${page.standings.size}")
+                val saved = repository.savePage(page, offset = requestedOffset)
+                _uiState.update { it.copy(showingSavedStandings = false) }
+                exportStandings(saved.standings)
             } catch (error: CancellationException) {
                 throw error
             } catch (error: Exception) {
-                failedOffset = requestedOffset
+                failedOffset = requestedOffset.takeUnless { onlyIfEmpty }
                 val kind = if (error is IOException && !hasValidatedInternet()) {
                     StandingsError.NO_INTERNET
                 } else {
                     StandingsError.LOAD_FAILED
                 }
-                _uiState.value = previous.copy(error = kind)
+
+                _uiState.update {
+                    it.copy(error = kind, showingSavedStandings = it.standings.isNotEmpty())
+                }
                 Log.w(TAG, "Failed to load offset=$requestedOffset", error)
+            } finally {
+                _uiState.update { it.copy(isLoading = false) }
             }
+        }
+    }
+
+    private suspend fun loadSavedStandings(): Boolean {
+        val cache = withContext(Dispatchers.IO) { storage.readCache() }
+        val hasSaved = repository.loadSavedStandings(cache?.standings.orEmpty())
+        if (cache != null) {
+            withContext(Dispatchers.IO) { storage.deleteCache() }
+        }
+        return hasSaved
+    }
+
+    private suspend fun exportStandings(standings: List<DriverStanding>) {
+        if (standings.isEmpty()) return
+
+        val snapshot = StandingsBackup(standings, System.currentTimeMillis())
+        try {
+            fileStorage.write(snapshot)
+        } catch (error: CancellationException) {
+            throw error
+        } catch (error: Exception) {
+            Log.w(TAG, "Failed to export standings to Downloads", error)
         }
     }
 
